@@ -1,0 +1,11 @@
+# Ignore the file with secret API keys
+.env
+
+# Ignore the Google credentials file
+credentials.json
+
+# Ignore the database file
+instance/users.db
+
+# Ignore Strava token file
+strava_token.json
