@@ -1,9 +1,199 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-5">
-      <h1 class="display-5 fw-bold">Welcome to Vita Inspire</h1>
-      <p class="col-md-8 fs-4">Your AI-powered personal fitness and nutrition coach. Sign up or log in to get started.</p>
+
+<!-- Hero Section -->
+<div class="glass-container text-center mb-5">
+  <div class="row align-items-center">
+    <div class="col-lg-6 mb-4 mb-lg-0">
+      <h1 class="display-2 fw-bold mb-4" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        #1 AI Fitness Coach
+      </h1>
+      <h2 class="h3 mb-4 text-white">
+        Personalized fitness plans<br>
+        <span style="background: var(--secondary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">for real life</span>
+      </h2>
+      <p class="lead mb-4 fs-5">
+        Make progress with the all-in-one AI-powered fitness and nutrition coach that adapts to your cravings, goals, and lifestyle.
+      </p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3">
+          <i class="fas fa-rocket me-2"></i>Start Today
+        </a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-5 py-3">
+          <i class="fas fa-sign-in-alt me-2"></i>Welcome Back
+        </a>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="glass-card p-4" style="background: var(--glass-bg);">
+        <div class="text-center mb-3">
+          <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+          <h4 class="text-white">Your Personal AI Coach</h4>
+        </div>
+        <div class="row text-center">
+          <div class="col-4">
+            <div class="glass-card p-3 mb-2" style="background: var(--success-gradient);">
+              <i class="fas fa-dumbbell fa-2x text-white mb-2"></i>
+              <p class="text-white mb-0 small">Smart Workouts</p>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="glass-card p-3 mb-2" style="background: var(--warning-gradient);">
+              <i class="fas fa-apple-alt fa-2x text-white mb-2"></i>
+              <p class="text-white mb-0 small">Personalized Nutrition</p>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="glass-card p-3 mb-2" style="background: var(--primary-gradient);">
+              <i class="fas fa-chart-line fa-2x text-white mb-2"></i>
+              <p class="text-white mb-0 small">Track Progress</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+</div>
+
+<!-- Testimonials Section -->
+<div class="glass-container mb-5">
+  <div class="text-center mb-4">
+    <h3 class="text-white mb-2">What Our Users Say</h3>
+    <div class="d-flex justify-content-center align-items-center gap-2">
+      <i class="fas fa-star text-warning"></i>
+      <i class="fas fa-star text-warning"></i>
+      <i class="fas fa-star text-warning"></i>
+      <i class="fas fa-star text-warning"></i>
+      <i class="fas fa-star text-warning"></i>
+      <span class="text-white ms-2">5-Star Ratings</span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <div class="glass-card p-4 h-100">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+            <i class="fas fa-user text-white"></i>
+          </div>
+          <div>
+            <h6 class="text-white mb-0">Sarah M.</h6>
+            <small class="text-muted">Lost 25 lbs</small>
+          </div>
+        </div>
+        <p class="text-white-50">"VitaInspire helped me understand my cravings and create a sustainable fitness plan. The AI coach is incredibly personalized!"</p>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="glass-card p-4 h-100">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-success d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+            <i class="fas fa-user text-white"></i>
+          </div>
+          <div>
+            <h6 class="text-white mb-0">Mike R.</h6>
+            <small class="text-muted">Gained 15 lbs muscle</small>
+          </div>
+        </div>
+        <p class="text-white-50">"The workout plans are amazing! It adapts to my gym access and gives me exactly what I need to build strength."</p>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="glass-card p-4 h-100">
+        <div class="d-flex align-items-center mb-3">
+          <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+            <i class="fas fa-user text-white"></i>
+          </div>
+          <div>
+            <h6 class="text-white mb-0">Emma L.</h6>
+            <small class="text-muted">Improved energy</small>
+          </div>
+        </div>
+        <p class="text-white-50">"Finally, a fitness app that understands my cravings! The nutrition suggestions are realistic and delicious."</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="glass-container mb-5">
+  <div class="text-center mb-4">
+    <h3 class="text-white">Hit your fitness goals in 1-2-3</h3>
+  </div>
+  <div class="row">
+    <div class="col-md-4 text-center mb-4">
+      <div class="glass-card p-4 h-100">
+        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+          <span class="text-white fw-bold fs-4">1</span>
+        </div>
+        <h5 class="text-white mb-3">Connect & Share</h5>
+        <p class="text-white-50">Connect your Google and Strava accounts to share your activity data and preferences with your AI coach.</p>
+      </div>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+      <div class="glass-card p-4 h-100">
+        <div class="rounded-circle bg-success d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+          <span class="text-white fw-bold fs-4">2</span>
+        </div>
+        <h5 class="text-white mb-3">Get Your Plan</h5>
+        <p class="text-white-50">Tell us what you're craving today and get a personalized workout and nutrition plan tailored to your goals.</p>
+      </div>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+      <div class="glass-card p-4 h-100">
+        <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+          <span class="text-white fw-bold fs-4">3</span>
+        </div>
+        <h5 class="text-white mb-3">Track & Improve</h5>
+        <p class="text-white-50">Follow your progress, sync with your calendar, and get email summaries to stay on track with your goals.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<div class="glass-container mb-5">
+  <div class="row align-items-center">
+    <div class="col-lg-6 mb-4 mb-lg-0">
+      <h3 class="text-white mb-4">Smart Integration</h3>
+      <div class="d-flex align-items-center mb-3">
+        <i class="fab fa-google fa-2x text-danger me-3"></i>
+        <div>
+          <h6 class="text-white mb-1">Google Integration</h6>
+          <p class="text-white-50 mb-0">Sync with Google Calendar and Gmail for seamless planning</p>
+        </div>
+      </div>
+      <div class="d-flex align-items-center mb-3">
+        <i class="fab fa-strava fa-2x text-warning me-3"></i>
+        <div>
+          <h6 class="text-white mb-1">Strava Integration</h6>
+          <p class="text-white-50 mb-0">Track your workouts and activity automatically</p>
+        </div>
+      </div>
+      <div class="d-flex align-items-center">
+        <i class="fas fa-robot fa-2x text-primary me-3"></i>
+        <div>
+          <h6 class="text-white mb-1">AI-Powered</h6>
+          <p class="text-white-50 mb-0">Personalized recommendations based on your data</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="glass-card p-4 text-center">
+        <i class="fas fa-brain fa-4x text-primary mb-3"></i>
+        <h4 class="text-white mb-3">Powered by AI</h4>
+        <p class="text-white-50">Our advanced AI analyzes your activity, weather, and cravings to create the perfect daily plan.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA Section -->
+<div class="glass-container text-center">
+  <h3 class="text-white mb-4">Ready to transform your fitness journey?</h3>
+  <p class="lead text-white-50 mb-4">Join thousands of users who have already achieved their fitness goals with VitaInspire.</p>
+  <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3">
+    <i class="fas fa-rocket me-2"></i>Start Your Free Journey Today
+  </a>
+</div>
+
 {% endblock %}

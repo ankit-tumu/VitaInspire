@@ -1,4 +1,4 @@
-# app.py - Your main Flask application file
+ # app.py - Your main Flask application file
 
 from flask import Flask, render_template, request, redirect, url_for, flash, render_template_string, session
 from flask_sqlalchemy import SQLAlchemy
@@ -154,6 +154,7 @@ def generate_plan_for_user(user, strava_summary, weather_summary):
         - Weight: {user.weight} lbs
         - Goal: {user.fitness_goal}
         - Gym Access: {'Yes' if user.has_gym_access else 'No'}
+        - Exercise Time Available: {getattr(user, 'exercise_time', 30)} minutes
         - Current Cravings: {user.common_foods}
 
         **User's Real-Time Context:**
@@ -163,7 +164,7 @@ def generate_plan_for_user(user, strava_summary, weather_summary):
         **Your Task:**
         1.  **Analyze & Reason:** In a "Coach's Note", briefly explain your reasoning for today's plan. Explicitly mention how the weather, recent Strava activity, and gym access influenced your decision.
         2.  **Create the Plan:**
-            - **Workout:** If the user has gym access, include exercises using common gym equipment (e.g., dumbbells, barbells). If not, provide a bodyweight or home-based workout.
+            - **Workout:** Design a {getattr(user, 'exercise_time', 30)}-minute workout. If the user has gym access, include exercises using common gym equipment (e.g., dumbbells, barbells). If not, provide a bodyweight or home-based workout. Adjust the number and duration of exercises to fit within the {getattr(user, 'exercise_time', 30)}-minute timeframe.
             - **Nutrition:** Incorporate the user's current cravings into the meal suggestions while keeping them aligned with their fitness goal. Suggest healthier alternatives or ways to satisfy cravings in moderation.
         3.  **Format:** Use markdown bullet points (*) for all exercises and meal items. Keep descriptions brief.
 
@@ -180,33 +181,37 @@ def generate_plan_for_user(user, strava_summary, weather_summary):
         print(f"An error occurred with the AI model: {e}")
         return None
 
-    # Save to Google Drive
+    # Save to Google Drive (optional - plan generation continues even if this fails)
     print("TOOL: 📄 Saving plan to Google Drive...")
     try:
-        creds = get_google_creds_from_user(user)
-        service = build("drive", "v3", credentials=creds)
-        file_name = f"{user.email.replace('@', '_').replace('.', '_')}.xlsx"
-        df = pd.DataFrame([{"Date": pd.Timestamp.now().strftime('%Y-%m-%d'), **plan_dict}])
+        if user.google_token:
+            creds = get_google_creds_from_user(user)
+            service = build("drive", "v3", credentials=creds)
+            file_name = f"{user.email.replace('@', '_').replace('.', '_')}.xlsx"
+            df = pd.DataFrame([{"Date": pd.Timestamp.now().strftime('%Y-%m-%d'), **plan_dict}])
 
-        buffer = io.BytesIO()
-        df.to_excel(buffer, index=False, sheet_name='Plan')
-        buffer.seek(0)
+            buffer = io.BytesIO()
+            df.to_excel(buffer, index=False, sheet_name='Plan')
+            buffer.seek(0)
 
-        file_metadata = {'name': file_name}
-        media = MediaIoBaseUpload(buffer, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            file_metadata = {'name': file_name}
+            media = MediaIoBaseUpload(buffer, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-        response = service.files().list(q=f"name='{file_name}' and trashed=false", fields='files(id)').execute()
-        if response.get('files'):
-            file_id = response.get('files')[0].get('id')
-            service.files().update(fileId=file_id, media_body=media).execute()
+            response = service.files().list(q=f"name='{file_name}' and trashed=false", fields='files(id)').execute()
+            if response.get('files'):
+                file_id = response.get('files')[0].get('id')
+                service.files().update(fileId=file_id, media_body=media).execute()
+            else:
+                service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+            print(f"TOOL: ✅ Saved plan to '{file_name}'.")
         else:
-            service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-
-        print(f"TOOL: ✅ Saved plan to '{file_name}'.")
-        return plan_dict
+            print("TOOL: ⚠️ Google Drive not connected - plan saved locally only.")
     except Exception as e:
         print(f"An error occurred with Google Drive: {e}")
-        return None
+        print("TOOL: ⚠️ Plan generation continues without Google Drive save.")
+    
+    return plan_dict
 
 
 def send_email_for_user(user, plan):
@@ -292,6 +297,10 @@ def home():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    # Redirect logged-in users to dashboard
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -347,6 +356,10 @@ def verify_email(token):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Redirect logged-in users to dashboard
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
     if request.method == 'POST':
         email, password = request.form.get('email'), request.form.get('password')
         user = User.query.filter_by(email=email).first()
@@ -386,6 +399,12 @@ def generate_plan():
     # 1. Save new preferences from the form
     current_user.common_foods = request.form.get('common_foods')
     current_user.has_gym_access = request.form.get('has_gym_access') == 'true'
+    # Temporarily handle exercise_time field that might not exist yet
+    try:
+        current_user.exercise_time = int(request.form.get('exercise_time', 30))
+    except AttributeError:
+        # If the field doesn't exist yet, just skip it for now
+        pass
     db.session.commit()
 
     # 2. Gather all real-time context

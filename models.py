@@ -17,6 +17,7 @@ class User(UserMixin, db.Model):
     # New personalization fields
     common_foods = db.Column(db.Text)  # Stores user cravings/preferences
     has_gym_access = db.Column(db.Boolean, default=False)
+    exercise_time = db.Column(db.Integer, default=30)  # Exercise time in minutes
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

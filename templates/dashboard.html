@@ -1,95 +1,103 @@
 {% extends "base.html" %}
 {% block content %}
-  <h3>Welcome, {{ current_user.email }}!</h3>
-
-  <div class="row">
-    <div class="col-md-5">
-        <h4>Connect & Configure</h4>
-        <div class="card mb-4">
-            <div class="card-body">
-                <p><strong>Google:</strong> 
-                    {% if current_user.google_token %}<span class="badge bg-success">Connected</span>{% else %}<a href="{{ url_for('connect_google') }}" class="btn btn-sm btn-danger">Connect</a>{% endif %}
-                </p>
-                <p><strong>Strava:</strong> 
-                    {% if current_user.strava_token %}<span class="badge bg-success">Connected</span>{% else %}<a href="{{ url_for('connect_strava') }}" class="btn btn-sm btn-warning">Connect</a>{% endif %}
-                </p>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-body">
-                <h5>Generate Your Daily Plan</h5>
-                <p>Your goal is currently set to: <strong>{{ current_user.fitness_goal }}</strong></p>
-                {% if current_user.google_token and current_user.strava_token %}
-                <form id="generate-plan-form" method="POST" action="{{ url_for('generate_plan') }}">
-                    <div class="mb-3">
-                        <label for="common_foods" class="form-label">What are you craving today?</label>
-                        <textarea class="form-control" name="common_foods" rows="3" placeholder="e.g., pizza, ice cream, sushi, chocolate...">{{ current_user.common_foods or '' }}</textarea>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" name="has_gym_access" value="true" {% if current_user.has_gym_access %}checked{% endif %}>
-                        <label class="form-check-label" for="has_gym_access">I have access to a gym</label>
-                    </div>
-                    <button type="submit" id="generate-plan-btn" class="btn btn-primary w-100">
-                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                        <span class="button-text">Generate Today's Plan</span>
-                    </button>
-                </form>
-                {% else %}
-                <p class="text-muted">Please connect both accounts to generate a plan.</p>
-                {% endif %}
-            </div>
-        </div>
+<div class="row">
+  <div class="col-md-5">
+    <div class="glass-card mb-4 p-4">
+      <h4 class="mb-3"><i class="fas fa-cogs me-2"></i>Connect & Configure</h4>
+      <div class="mb-3">
+        <p><strong><i class="fab fa-google me-1"></i>Google:</strong>
+          {% if current_user.google_token %}<span class="badge bg-success">Connected</span>{% else %}<a href="{{ url_for('connect_google') }}" class="btn btn-sm btn-danger ms-2">Connect</a>{% endif %}
+        </p>
+        <p><strong><i class="fab fa-strava me-1"></i>Strava:</strong>
+          {% if current_user.strava_token %}<span class="badge bg-success">Connected</span>{% else %}<a href="{{ url_for('connect_strava') }}" class="btn btn-sm btn-warning ms-2">Connect</a>{% endif %}
+        </p>
+      </div>
     </div>
-    <div class="col-md-7">
-        <h4>Your Generated Plan</h4>
-        {% if plan %}
-        <div class="card">
-            <div class="card-header">
-                Plan for {{ now.strftime('%A, %B %d') }}
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <strong>Coach's Note:</strong> {{ plan.coach_note }}
-                </div>
-                <h5>Workout</h5>
-                <div class="plan-content">{{ plan.workout_activity_html | safe }}</div>
-                <p><strong>Target:</strong> Burn {{ plan.calories_to_burn }} calories</p>
-                <hr>
-                <h5>Nutrition</h5>
-                <div class="plan-content">{{ plan.meal_suggestion_html | safe }}</div>
-                <p><strong>Target:</strong> Consume {{ plan.calories_to_consume }} calories</p>
-            </div>
-            <div class="card-footer text-end">
-                <form method="POST" action="{{ url_for('add_to_calendar') }}" style="display: inline;">
-                    <button type="submit" class="btn btn-info">Add to Calendar</button>
-                </form>
-                <form method="POST" action="{{ url_for('send_email') }}" style="display: inline;">
-                    <button type="submit" class="btn btn-success">Send to Email</button>
-                </form>
-            </div>
+    <div class="glass-card p-4">
+      <h5 class="mb-3"><i class="fas fa-magic me-2"></i>Generate Your Daily Plan</h5>
+      <p>Your goal is currently set to: <strong>{{ current_user.fitness_goal }}</strong></p>
+      {% if current_user.google_token and current_user.strava_token %}
+      <form id="generate-plan-form" method="POST" action="{{ url_for('generate_plan') }}">
+        <div class="mb-3">
+          <label for="common_foods" class="form-label">What are you craving today?</label>
+          <textarea class="form-control" name="common_foods" rows="3" placeholder="e.g., pizza, ice cream, sushi, chocolate...">{{ current_user.common_foods or '' }}</textarea>
         </div>
-        {% else %}
-        <div class="card">
-            <div class="card-body text-center text-muted">
-                <p>Your plan will appear here once you generate it.</p>
-            </div>
+        <div class="mb-3 form-check">
+          <input type="checkbox" class="form-check-input" name="has_gym_access" value="true" {% if current_user.has_gym_access %}checked{% endif %}>
+          <label class="form-check-label" for="has_gym_access">I have access to a gym</label>
         </div>
-        {% endif %}
+        <div class="mb-3">
+          <label for="exercise_time" class="form-label">How much time do you have for exercise today?</label>
+          <select class="form-control" name="exercise_time" id="exercise_time">
+            <option value="15">15 minutes</option>
+            <option value="30" selected>30 minutes</option>
+            <option value="45">45 minutes</option>
+            <option value="60">1 hour</option>
+            <option value="90">1.5 hours</option>
+            <option value="120">2 hours</option>
+          </select>
+        </div>
+        <button type="submit" id="generate-plan-btn" class="btn btn-primary w-100">
+          <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+          <span class="button-text">Generate Today's Plan</span>
+        </button>
+      </form>
+      {% else %}
+      <p class="text-muted">Please connect both accounts to generate a plan.</p>
+      {% endif %}
     </div>
   </div>
-
-  <script>
-    const form = document.getElementById('generate-plan-form');
-    if (form) {
-      form.addEventListener('submit', function() {
-        const btn = document.getElementById('generate-plan-btn');
-        const spinner = btn.querySelector('.spinner-border');
-        const buttonText = btn.querySelector('.button-text');
-
-        btn.disabled = true;
-        spinner.classList.remove('d-none');
-        buttonText.textContent = ' Generating...';
-      });
-    }
-  </script>
+  <div class="col-md-7">
+    <div class="glass-card p-4">
+      <h4 class="mb-3"><i class="fas fa-clipboard-list me-2"></i>Your Generated Plan</h4>
+      {% if plan %}
+      <div class="card mb-3 glass-card" style="background: var(--glass-bg);">
+        <div class="card-header bg-transparent border-0">
+          <span class="fw-bold text-white">Plan for {{ now.strftime('%A, %B %d') }}</span>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-info glass-card coach-note">
+            <strong class="text-white"><i class="fas fa-user-astronaut me-2"></i>Coach's Note:</strong> 
+            <span class="text-white">{{ plan.coach_note }}</span>
+          </div>
+          <h5 class="mt-3"><i class="fas fa-dumbbell me-2"></i>Workout</h5>
+          <div class="plan-content text-white">{{ plan.workout_activity_html | safe }}</div>
+          <p class="mt-2 text-white"><strong>Target:</strong> Burn {{ plan.calories_to_burn }} calories</p>
+          <hr>
+          <h5><i class="fas fa-utensils me-2"></i>Nutrition</h5>
+          <div class="plan-content text-white">{{ plan.meal_suggestion_html | safe }}</div>
+          <p class="mt-2"><strong>Target:</strong> Consume {{ plan.calories_to_consume }} calories</p>
+        </div>
+        <div class="card-footer bg-transparent border-0 text-end">
+          <form method="POST" action="{{ url_for('add_to_calendar') }}" style="display: inline;">
+            <button type="submit" class="btn btn-info me-2"><i class="fas fa-calendar-plus me-1"></i>Add to Calendar</button>
+          </form>
+          <form method="POST" action="{{ url_for('send_email') }}" style="display: inline;">
+            <button type="submit" class="btn btn-success"><i class="fas fa-envelope me-1"></i>Send to Email</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <div class="card glass-card">
+        <div class="card-body text-center text-muted">
+          <p>Your plan will appear here once you generate it.</p>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script>
+  const form = document.getElementById('generate-plan-form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      const btn = document.getElementById('generate-plan-btn');
+      const spinner = btn.querySelector('.spinner-border');
+      const buttonText = btn.querySelector('.button-text');
+      btn.disabled = true;
+      spinner.classList.remove('d-none');
+      buttonText.textContent = ' Generating...';
+    });
+  }
+</script>
 {% endblock %}

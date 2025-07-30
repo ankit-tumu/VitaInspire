@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Register a New Account</h2>
+<div class="glass-container mx-auto" style="max-width: 500px;">
+  <h2 class="mb-4 text-center"><i class="fas fa-user-plus me-2"></i>Register a New Account</h2>
   <form method="POST" action="">
     <div class="mb-3">
       <label for="email" class="form-label">Email address</label>
@@ -15,7 +16,7 @@
       <input type="password" class="form-control" name="password2" required>
     </div>
     <hr>
-    <h5>Your Details</h5>
+    <h5 class="mb-3"><i class="fas fa-user-cog me-2"></i>Your Details</h5>
     <div class="mb-3">
       <label for="height" class="form-label">Height</label>
       <input type="text" class="form-control" name="height" placeholder="e.g., 5ft 10in" required>
@@ -29,22 +30,58 @@
       <input type="text" class="form-control" name="zip_code" required>
     </div>
     <div class="mb-3">
-        <label class="form-label">Primary Fitness Goal</label>
-        <div class="input-group">
-            <select class="form-select" name="goal_type">
-                <option value="Lose Weight">Lose Weight</option>
-                <option value="Run a Distance">Run a Distance</option>
-                <option value="Bench Press">Bench Press</option>
-            </select>
-            <input type="number" class="form-control" name="goal_value" placeholder="Value" min="1" required>
-            <select class="form-select" name="goal_unit">
-                <option value="lbs">lbs</option>
-                <option value="kg">kg</option>
-                <option value="miles">miles</option>
-                <option value="km">km</option>
-            </select>
-        </div>
+      <label class="form-label">Primary Fitness Goal</label>
+      <div class="input-group">
+        <select class="form-select" name="goal_type" id="goalType" onchange="updateUnits()">
+          <option value="Lose Weight">Lose Weight</option>
+          <option value="Run a Distance">Run a Distance</option>
+          <option value="Bench Press">Bench Press</option>
+        </select>
+        <input type="number" class="form-control" name="goal_value" placeholder="Value" min="1" required>
+        <select class="form-select" name="goal_unit" id="goalUnit">
+          <option value="lbs">lbs</option>
+          <option value="kg">kg</option>
+          <option value="miles">miles</option>
+          <option value="km">km</option>
+        </select>
+      </div>
     </div>
-    <button type="submit" class="btn btn-primary">Register</button>
+    <button type="submit" class="btn btn-primary w-100 mt-3"><i class="fas fa-user-plus me-2"></i>Register</button>
   </form>
+</div>
+
+<script>
+function updateUnits() {
+  const goalType = document.getElementById('goalType').value;
+  const goalUnit = document.getElementById('goalUnit');
+  
+  // Clear existing options
+  goalUnit.innerHTML = '';
+  
+  if (goalType === 'Lose Weight') {
+    // Weight units only
+    goalUnit.innerHTML = `
+      <option value="lbs">lbs</option>
+      <option value="kg">kg</option>
+    `;
+  } else if (goalType === 'Run a Distance') {
+    // Distance units only
+    goalUnit.innerHTML = `
+      <option value="miles">miles</option>
+      <option value="km">km</option>
+    `;
+  } else if (goalType === 'Bench Press') {
+    // Weight units only
+    goalUnit.innerHTML = `
+      <option value="lbs">lbs</option>
+      <option value="kg">kg</option>
+    `;
+  }
+}
+
+// Initialize units on page load
+document.addEventListener('DOMContentLoaded', function() {
+  updateUnits();
+});
+</script>
 {% endblock %}

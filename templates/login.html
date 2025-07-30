@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Login to Your Account</h2>
+<div class="glass-container mx-auto" style="max-width: 400px;">
+  <h2 class="mb-4 text-center"><i class="fas fa-sign-in-alt me-2"></i>Login to Your Account</h2>
   <form method="POST" action="">
     <div class="mb-3">
       <label for="email" class="form-label">Email address</label>
@@ -10,6 +11,7 @@
       <label for="password" class="form-label">Password</label>
       <input type="password" class="form-control" name="password" required>
     </div>
-    <button type="submit" class="btn btn-primary">Login</button>
+    <button type="submit" class="btn btn-primary w-100 mt-3"><i class="fas fa-sign-in-alt me-2"></i>Login</button>
   </form>
+</div>
 {% endblock %}

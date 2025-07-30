@@ -6,6 +6,14 @@ credentials.json
 
 # Ignore the database file
 instance/users.db
+vita_inspire.db
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 
 # Ignore Strava token file
 strava_token.json
