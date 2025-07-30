@@ -396,6 +396,12 @@ def login():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    # Check if user is verified
+    if not current_user.is_verified:
+        logout_user()
+        flash('Please verify your email address before accessing the dashboard.', 'warning')
+        return redirect(url_for('login'))
+    
     plan = session.get('current_plan')
     if plan:
         plan['workout_activity_html'] = markdown2.markdown(plan['workout_activity'])
@@ -415,6 +421,12 @@ def logout():
 @app.route('/generate-plan', methods=['POST'])
 @login_required
 def generate_plan():
+    # Check if user is verified
+    if not current_user.is_verified:
+        logout_user()
+        flash('Please verify your email address before accessing this feature.', 'warning')
+        return redirect(url_for('login'))
+    
     # 1. Save new preferences from the form
     current_user.common_foods = request.form.get('common_foods')
     current_user.has_gym_access = request.form.get('has_gym_access') == 'true'
@@ -445,6 +457,12 @@ def generate_plan():
 @app.route('/send-email', methods=['POST'])
 @login_required
 def send_email():
+    # Check if user is verified
+    if not current_user.is_verified:
+        logout_user()
+        flash('Please verify your email address before accessing this feature.', 'warning')
+        return redirect(url_for('login'))
+    
     plan = session.get('current_plan')
     if not plan:
         flash('No plan found to send. Please generate one first.', 'warning')
@@ -460,6 +478,12 @@ def send_email():
 @app.route('/add-to-calendar', methods=['POST'])
 @login_required
 def add_to_calendar():
+    # Check if user is verified
+    if not current_user.is_verified:
+        logout_user()
+        flash('Please verify your email address before accessing this feature.', 'warning')
+        return redirect(url_for('login'))
+    
     plan = session.get('current_plan')
     if not plan:
         flash('No plan found to schedule. Please generate one first.', 'warning')
@@ -476,6 +500,12 @@ def add_to_calendar():
 @app.route('/connect-google')
 @login_required
 def connect_google():
+    # Check if user is verified
+    if not current_user.is_verified:
+        logout_user()
+        flash('Please verify your email address before connecting accounts.', 'warning')
+        return redirect(url_for('login'))
+    
     # Use environment variables instead of credentials file
     client_config = {
         "web": {
@@ -525,6 +555,12 @@ def google_callback():
 @app.route('/connect-strava')
 @login_required
 def connect_strava():
+    # Check if user is verified
+    if not current_user.is_verified:
+        logout_user()
+        flash('Please verify your email address before connecting accounts.', 'warning')
+        return redirect(url_for('login'))
+    
     client = Client()
     authorize_url = client.authorization_url(client_id=STRAVA_CLIENT_ID,
                                              redirect_uri=url_for('strava_callback', _external=True),
