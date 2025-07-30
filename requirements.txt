@@ -10,4 +10,5 @@ google-auth
 google-auth-oauthlib
 google-api-python-client
 markdown2
-itsdangerousgunicorn==21.2.0
+itsdangerous
+gunicorn==21.2.0
