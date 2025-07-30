@@ -10,6 +10,7 @@ google-auth
 google-auth-oauthlib
 google-api-python-client
 google-generativeai
+openpyxl
 markdown2
 itsdangerous
 gunicorn==21.2.0
