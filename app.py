@@ -317,9 +317,16 @@ def register():
         goal_unit = request.form.get('goal_unit')
         fitness_goal = f"{goal_type} {goal_value} {goal_unit}"
 
-        if User.query.filter_by(email=email).first():
-            flash('Email address already exists.', 'warning');
-            return redirect(url_for('register'))
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            if existing_user.is_verified:
+                flash('Email address already registered and verified. Please login.', 'info')
+                return redirect(url_for('login'))
+            else:
+                flash('Email address already registered but not verified. Please check your email for verification link.', 'warning')
+                return redirect(url_for('login'))
+        
         if password != password2:
             flash('Passwords do not match.', 'danger');
             return redirect(url_for('register'))
@@ -367,12 +374,20 @@ def login():
     if request.method == 'POST':
         email, password = request.form.get('email'), request.form.get('password')
         user = User.query.filter_by(email=email).first()
-        if not user or not user.check_password(password) or not user.is_verified:
-            flash('Please check your login details and try again.', 'danger');
+        
+        if not user:
+            flash('Email address not found. Please register first.', 'danger')
+            return redirect(url_for('login'))
+        
+        if not user.check_password(password):
+            flash('Incorrect password. Please try again.', 'danger')
+            return redirect(url_for('login'))
+        
+        if not user.is_verified:
+            flash('Please verify your email address before logging in. Check your email for the verification link.', 'warning')
             return redirect(url_for('login'))
 
         session.pop('current_plan', None)
-
         login_user(user)
         return redirect(url_for('dashboard'))
     return render_template('login.html')
