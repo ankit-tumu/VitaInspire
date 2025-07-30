@@ -83,7 +83,11 @@ def load_user(user_id):
 # (Moved to templates/ directory)
 
 
-# --- Helper Function for Sending Emails ---
+# --- Helper Functions ---
+def clear_flash_messages():
+    """Clear any existing flash messages to prevent duplicates"""
+    session.pop('_flashes', None)
+
 def send_verification_email(user_email):
     token = s.dumps(user_email, salt='email-confirm-salt')
     verification_url = url_for('verify_email', token=token, _external=True)
@@ -384,6 +388,7 @@ def login():
             return redirect(url_for('login'))
         
         if not user.is_verified:
+            clear_flash_messages()
             flash('Please verify your email address before logging in. Check your email for the verification link.', 'warning')
             return redirect(url_for('login'))
 
@@ -399,6 +404,7 @@ def dashboard():
     # Check if user is verified
     if not current_user.is_verified:
         logout_user()
+        clear_flash_messages()
         flash('Please verify your email address before accessing the dashboard.', 'warning')
         return redirect(url_for('login'))
     
@@ -424,6 +430,7 @@ def generate_plan():
     # Check if user is verified
     if not current_user.is_verified:
         logout_user()
+        clear_flash_messages()
         flash('Please verify your email address before accessing this feature.', 'warning')
         return redirect(url_for('login'))
     
@@ -460,6 +467,7 @@ def send_email():
     # Check if user is verified
     if not current_user.is_verified:
         logout_user()
+        clear_flash_messages()
         flash('Please verify your email address before accessing this feature.', 'warning')
         return redirect(url_for('login'))
     
@@ -481,6 +489,7 @@ def add_to_calendar():
     # Check if user is verified
     if not current_user.is_verified:
         logout_user()
+        clear_flash_messages()
         flash('Please verify your email address before accessing this feature.', 'warning')
         return redirect(url_for('login'))
     
@@ -503,6 +512,7 @@ def connect_google():
     # Check if user is verified
     if not current_user.is_verified:
         logout_user()
+        clear_flash_messages()
         flash('Please verify your email address before connecting accounts.', 'warning')
         return redirect(url_for('login'))
     
@@ -558,6 +568,7 @@ def connect_strava():
     # Check if user is verified
     if not current_user.is_verified:
         logout_user()
+        clear_flash_messages()
         flash('Please verify your email address before connecting accounts.', 'warning')
         return redirect(url_for('login'))
     
