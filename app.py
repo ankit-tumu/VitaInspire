@@ -461,8 +461,19 @@ def add_to_calendar():
 @app.route('/connect-google')
 @login_required
 def connect_google():
-    flow = Flow.from_client_secrets_file(GOOGLE_CREDENTIALS_PATH, scopes=GOOGLE_SCOPES,
-                                         redirect_uri=url_for('google_callback', _external=True))
+    # Use environment variables instead of credentials file
+    client_config = {
+        "web": {
+            "client_id": os.getenv('GOOGLE_CLIENT_ID'),
+            "client_secret": os.getenv('GOOGLE_CLIENT_SECRET'),
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [url_for('google_callback', _external=True)]
+        }
+    }
+    
+    flow = Flow.from_client_config(client_config, scopes=GOOGLE_SCOPES,
+                                   redirect_uri=url_for('google_callback', _external=True))
     authorization_url, state = flow.authorization_url(access_type='offline', include_granted_scopes='true')
     session['google_oauth_state'] = state
     return redirect(authorization_url)
@@ -472,8 +483,20 @@ def connect_google():
 @login_required
 def google_callback():
     state = session.pop('google_oauth_state', None)
-    flow = Flow.from_client_secrets_file(GOOGLE_CREDENTIALS_PATH, scopes=GOOGLE_SCOPES, state=state,
-                                         redirect_uri=url_for('google_callback', _external=True))
+    
+    # Use environment variables instead of credentials file
+    client_config = {
+        "web": {
+            "client_id": os.getenv('GOOGLE_CLIENT_ID'),
+            "client_secret": os.getenv('GOOGLE_CLIENT_SECRET'),
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [url_for('google_callback', _external=True)]
+        }
+    }
+    
+    flow = Flow.from_client_config(client_config, scopes=GOOGLE_SCOPES, state=state,
+                                   redirect_uri=url_for('google_callback', _external=True))
     flow.fetch_token(authorization_response=request.url)
     credentials = flow.credentials
     current_user.google_token = json.dumps(
