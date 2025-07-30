@@ -9,6 +9,7 @@ stravalib
 google-auth
 google-auth-oauthlib
 google-api-python-client
+google-generativeai
 markdown2
 itsdangerous
 gunicorn==21.2.0
