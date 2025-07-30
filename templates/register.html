@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Register a New Account</h2>
+  <form method="POST" action="">
+    <div class="mb-3">
+      <label for="email" class="form-label">Email address</label>
+      <input type="email" class="form-control" name="email" required>
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input type="password" class="form-control" name="password" required>
+    </div>
+    <div class="mb-3">
+      <label for="password2" class="form-label">Confirm Password</label>
+      <input type="password" class="form-control" name="password2" required>
+    </div>
+    <hr>
+    <h5>Your Details</h5>
+    <div class="mb-3">
+      <label for="height" class="form-label">Height</label>
+      <input type="text" class="form-control" name="height" placeholder="e.g., 5ft 10in" required>
+    </div>
+    <div class="mb-3">
+      <label for="weight" class="form-label">Weight (lbs)</label>
+      <input type="number" class="form-control" name="weight" placeholder="e.g., 180" required>
+    </div>
+    <div class="mb-3">
+      <label for="zip_code" class="form-label">Zip Code</label>
+      <input type="text" class="form-control" name="zip_code" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Primary Fitness Goal</label>
+        <div class="input-group">
+            <select class="form-select" name="goal_type">
+                <option value="Lose Weight">Lose Weight</option>
+                <option value="Run a Distance">Run a Distance</option>
+                <option value="Bench Press">Bench Press</option>
+            </select>
+            <input type="number" class="form-control" name="goal_value" placeholder="Value" min="1" required>
+            <select class="form-select" name="goal_unit">
+                <option value="lbs">lbs</option>
+                <option value="kg">kg</option>
+                <option value="miles">miles</option>
+                <option value="km">km</option>
+            </select>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Register</button>
+  </form>
+{% endblock %}

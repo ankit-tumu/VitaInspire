@@ -26,15 +26,16 @@ import google.generativeai as genai
 import pandas as pd
 from stravalib.client import Client
 import markdown2
+from config import Config
+from models import User
+from extensions import db
 
 # --- App and Database Configuration ---
 load_dotenv()
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'a_super_secret_key_change_this')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'instance', 'users.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_object(Config)
 
 # --- Email Server Configuration ---
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
@@ -58,33 +59,14 @@ STRAVA_CLIENT_ID = os.getenv('STRAVA_CLIENT_ID')
 STRAVA_CLIENT_SECRET = os.getenv('STRAVA_CLIENT_SECRET')
 WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
 
-db = SQLAlchemy(app)
+db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 
 # --- Database Model ---
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
-    google_token = db.Column(db.Text)
-    strava_token = db.Column(db.Text)
-    is_verified = db.Column(db.Boolean, nullable=False, default=False)
-    height = db.Column(db.String(20))
-    weight = db.Column(db.Integer)
-    fitness_goal = db.Column(db.Text)
-    zip_code = db.Column(db.String(10))
-    # New personalization fields
-    common_foods = db.Column(db.Text)
-    has_gym_access = db.Column(db.Boolean, default=False)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+# (Moved to models.py)
 
 
 @login_manager.user_loader
@@ -93,220 +75,8 @@ def load_user(user_id):
 
 
 # --- HTML Templates (Registration and Dashboard Updated) ---
-base_template = """
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Vita Inspire</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('home') }}">🤖 Vita Inspire</a>
-        <div class="d-flex">
-          {% if current_user.is_authenticated %}
-            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light me-2">Dashboard</a>
-            <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Logout</a>
-          {% else %}
-            <a href="{{ url_for('login') }}" class="btn btn-outline-light me-2">Login</a>
-            <a href="{{ url_for('register') }}" class="btn btn-primary">Sign-Up</a>
-          {% endif %}
-        </div>
-      </div>
-    </nav>
-    <div class="container mt-4">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-      {% block content %}{% endblock %}
-    </div>
-  </body>
-</html>
-"""
-home_template = """
-{% extends "base.html" %}
-{% block content %}
-  <div class="p-5 mb-4 bg-light rounded-3">
-    <div class="container-fluid py-5">
-      <h1 class="display-5 fw-bold">Welcome to Vita Inspire</h1>
-      <p class="col-md-8 fs-4">Your AI-powered personal fitness and nutrition coach. Sign up or log in to get started.</p>
-    </div>
-  </div>
-{% endblock %}
-"""
-register_template = """
-{% extends "base.html" %}
-{% block content %}
-  <h2>Register a New Account</h2>
-  <form method="POST" action="">
-    <div class="mb-3">
-      <label for="email" class="form-label">Email address</label>
-      <input type="email" class="form-control" name="email" required>
-    </div>
-    <div class="mb-3">
-      <label for="password" class="form-label">Password</label>
-      <input type="password" class="form-control" name="password" required>
-    </div>
-    <div class="mb-3">
-      <label for="password2" class="form-label">Confirm Password</label>
-      <input type="password" class="form-control" name="password2" required>
-    </div>
-    <hr>
-    <h5>Your Details</h5>
-    <div class="mb-3">
-      <label for="height" class="form-label">Height</label>
-      <input type="text" class="form-control" name="height" placeholder="e.g., 5ft 10in" required>
-    </div>
-    <div class="mb-3">
-      <label for="weight" class="form-label">Weight (lbs)</label>
-      <input type="number" class="form-control" name="weight" placeholder="e.g., 180" required>
-    </div>
-    <div class="mb-3">
-      <label for="zip_code" class="form-label">Zip Code</label>
-      <input type="text" class="form-control" name="zip_code" required>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Primary Fitness Goal</label>
-        <div class="input-group">
-            <select class="form-select" name="goal_type">
-                <option value="Lose Weight">Lose Weight</option>
-                <option value="Run a Distance">Run a Distance</option>
-                <option value="Bench Press">Bench Press</option>
-            </select>
-            <input type="number" class="form-control" name="goal_value" placeholder="Value" min="1" required>
-            <select class="form-select" name="goal_unit">
-                <option value="lbs">lbs</option>
-                <option value="kg">kg</option>
-                <option value="miles">miles</option>
-                <option value="km">km</option>
-            </select>
-        </div>
-    </div>
-    <button type="submit" class="btn btn-primary">Register</button>
-  </form>
-{% endblock %}
-"""
-login_template = """
-{% extends "base.html" %}
-{% block content %}
-  <h2>Login to Your Account</h2>
-  <form method="POST" action="">
-    <div class="mb-3">
-      <label for="email" class="form-label">Email address</label>
-      <input type="email" class="form-control" name="email" required>
-    </div>
-    <div class="mb-3">
-      <label for="password" class="form-label">Password</label>
-      <input type="password" class="form-control" name="password" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Login</button>
-  </form>
-{% endblock %}
-"""
-dashboard_template = """
-{% extends "base.html" %}
-{% block content %}
-  <h3>Welcome, {{ current_user.email }}!</h3>
-
-  <div class="row">
-    <div class="col-md-5">
-        <h4>Connect & Configure</h4>
-        <div class="card mb-4">
-            <div class="card-body">
-                <p><strong>Google:</strong> 
-                    {% if current_user.google_token %}<span class="badge bg-success">Connected</span>{% else %}<a href="{{ url_for('connect_google') }}" class="btn btn-sm btn-danger">Connect</a>{% endif %}
-                </p>
-                <p><strong>Strava:</strong> 
-                    {% if current_user.strava_token %}<span class="badge bg-success">Connected</span>{% else %}<a href="{{ url_for('connect_strava') }}" class="btn btn-sm btn-warning">Connect</a>{% endif %}
-                </p>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-body">
-                <h5>Generate Your Daily Plan</h5>
-                <p>Your goal is currently set to: <strong>{{ current_user.fitness_goal }}</strong></p>
-                {% if current_user.google_token and current_user.strava_token %}
-                <form id="generate-plan-form" method="POST" action="{{ url_for('generate_plan') }}">
-                    <div class="mb-3">
-                        <label for="common_foods" class="form-label">Common Foods You Eat</label>
-                        <textarea class="form-control" name="common_foods" rows="3" placeholder="e.g., chicken breast, rice, broccoli, eggs...">{{ current_user.common_foods or '' }}</textarea>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" name="has_gym_access" value="true" {% if current_user.has_gym_access %}checked{% endif %}>
-                        <label class="form-check-label" for="has_gym_access">I have access to a gym</label>
-                    </div>
-                    <button type="submit" id="generate-plan-btn" class="btn btn-primary w-100">
-                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                        <span class="button-text">Generate Today's Plan</span>
-                    </button>
-                </form>
-                {% else %}
-                <p class="text-muted">Please connect both accounts to generate a plan.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    <div class="col-md-7">
-        <h4>Your Generated Plan</h4>
-        {% if plan %}
-        <div class="card">
-            <div class="card-header">
-                Plan for {{ now.strftime('%A, %B %d') }}
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <strong>Coach's Note:</strong> {{ plan.coach_note }}
-                </div>
-                <h5>Workout</h5>
-                <div class="plan-content">{{ plan.workout_activity_html | safe }}</div>
-                <p><strong>Target:</strong> Burn {{ plan.calories_to_burn }} calories</p>
-                <hr>
-                <h5>Nutrition</h5>
-                <div class="plan-content">{{ plan.meal_suggestion_html | safe }}</div>
-                <p><strong>Target:</strong> Consume {{ plan.calories_to_consume }} calories</p>
-            </div>
-            <div class="card-footer text-end">
-                <form method="POST" action="{{ url_for('add_to_calendar') }}" style="display: inline;">
-                    <button type="submit" class="btn btn-info">Add to Calendar</button>
-                </form>
-                <form method="POST" action="{{ url_for('send_email') }}" style="display: inline;">
-                    <button type="submit" class="btn btn-success">Send to Email</button>
-                </form>
-            </div>
-        </div>
-        {% else %}
-        <div class="card">
-            <div class="card-body text-center text-muted">
-                <p>Your plan will appear here once you generate it.</p>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-  </div>
-
-  <script>
-    const form = document.getElementById('generate-plan-form');
-    if (form) {
-      form.addEventListener('submit', function() {
-        const btn = document.getElementById('generate-plan-btn');
-        const spinner = btn.querySelector('.spinner-border');
-        const buttonText = btn.querySelector('.button-text');
-
-        btn.disabled = true;
-        spinner.classList.remove('d-none');
-        buttonText.textContent = ' Generating...';
-      });
-    }
-  </script>
-{% endblock %}
-"""
+# --- Inline Templates ---
+# (Moved to templates/ directory)
 
 
 # --- Helper Function for Sending Emails ---
@@ -384,7 +154,7 @@ def generate_plan_for_user(user, strava_summary, weather_summary):
         - Weight: {user.weight} lbs
         - Goal: {user.fitness_goal}
         - Gym Access: {'Yes' if user.has_gym_access else 'No'}
-        - Common Foods: {user.common_foods}
+        - Current Cravings: {user.common_foods}
 
         **User's Real-Time Context:**
         - Recent Activity (from Strava): {strava_summary}
@@ -394,7 +164,7 @@ def generate_plan_for_user(user, strava_summary, weather_summary):
         1.  **Analyze & Reason:** In a "Coach's Note", briefly explain your reasoning for today's plan. Explicitly mention how the weather, recent Strava activity, and gym access influenced your decision.
         2.  **Create the Plan:**
             - **Workout:** If the user has gym access, include exercises using common gym equipment (e.g., dumbbells, barbells). If not, provide a bodyweight or home-based workout.
-            - **Nutrition:** Incorporate some of the user's "Common Foods" into the meal suggestions if they align with the fitness goal.
+            - **Nutrition:** Incorporate the user's current cravings into the meal suggestions while keeping them aligned with their fitness goal. Suggest healthier alternatives or ways to satisfy cravings in moderation.
         3.  **Format:** Use markdown bullet points (*) for all exercises and meal items. Keep descriptions brief.
 
         Respond with ONLY a valid JSON object in the following format:
@@ -517,7 +287,7 @@ def create_calendar_event_for_user(user, plan):
 @app.route('/')
 def home():
     session.pop('current_plan', None)
-    return render_template_with_base(home_template)
+    return render_template('home.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -555,7 +325,7 @@ def register():
             return redirect(url_for('login'))
         else:
             flash('Could not send verification email.', 'danger')
-    return render_template_with_base(register_template)
+    return render_template('register.html')
 
 
 @app.route('/verify-email/<token>')
@@ -588,7 +358,7 @@ def login():
 
         login_user(user)
         return redirect(url_for('dashboard'))
-    return render_template_with_base(login_template)
+    return render_template('login.html')
 
 
 @app.route('/dashboard')
@@ -598,7 +368,7 @@ def dashboard():
     if plan:
         plan['workout_activity_html'] = markdown2.markdown(plan['workout_activity'])
         plan['meal_suggestion_html'] = markdown2.markdown(plan['meal_suggestion'])
-    return render_template_with_base(dashboard_template, plan=plan, now=datetime.now())
+    return render_template('dashboard.html', plan=plan, now=datetime.now())
 
 
 @app.route('/logout')
@@ -715,13 +485,6 @@ def strava_callback():
     else:
         flash('Could not connect to Strava.', 'danger')
     return redirect(url_for('dashboard'))
-
-
-# --- Helper Function for Rendering ---
-def render_template_with_base(template_string, **context):
-    content_block = template_string.replace('{% extends "base.html" %}', '')
-    full_html = base_template.replace('{% block content %}{% endblock %}', content_block)
-    return render_template_string(full_html, **context)
 
 
 if __name__ == '__main__':

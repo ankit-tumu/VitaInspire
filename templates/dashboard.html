@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+  <h3>Welcome, {{ current_user.email }}!</h3>
+
+  <div class="row">
+    <div class="col-md-5">
+        <h4>Connect & Configure</h4>
+        <div class="card mb-4">
+            <div class="card-body">
+                <p><strong>Google:</strong> 
+                    {% if current_user.google_token %}<span class="badge bg-success">Connected</span>{% else %}<a href="{{ url_for('connect_google') }}" class="btn btn-sm btn-danger">Connect</a>{% endif %}
+                </p>
+                <p><strong>Strava:</strong> 
+                    {% if current_user.strava_token %}<span class="badge bg-success">Connected</span>{% else %}<a href="{{ url_for('connect_strava') }}" class="btn btn-sm btn-warning">Connect</a>{% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h5>Generate Your Daily Plan</h5>
+                <p>Your goal is currently set to: <strong>{{ current_user.fitness_goal }}</strong></p>
+                {% if current_user.google_token and current_user.strava_token %}
+                <form id="generate-plan-form" method="POST" action="{{ url_for('generate_plan') }}">
+                    <div class="mb-3">
+                        <label for="common_foods" class="form-label">What are you craving today?</label>
+                        <textarea class="form-control" name="common_foods" rows="3" placeholder="e.g., pizza, ice cream, sushi, chocolate...">{{ current_user.common_foods or '' }}</textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="has_gym_access" value="true" {% if current_user.has_gym_access %}checked{% endif %}>
+                        <label class="form-check-label" for="has_gym_access">I have access to a gym</label>
+                    </div>
+                    <button type="submit" id="generate-plan-btn" class="btn btn-primary w-100">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="button-text">Generate Today's Plan</span>
+                    </button>
+                </form>
+                {% else %}
+                <p class="text-muted">Please connect both accounts to generate a plan.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <h4>Your Generated Plan</h4>
+        {% if plan %}
+        <div class="card">
+            <div class="card-header">
+                Plan for {{ now.strftime('%A, %B %d') }}
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Coach's Note:</strong> {{ plan.coach_note }}
+                </div>
+                <h5>Workout</h5>
+                <div class="plan-content">{{ plan.workout_activity_html | safe }}</div>
+                <p><strong>Target:</strong> Burn {{ plan.calories_to_burn }} calories</p>
+                <hr>
+                <h5>Nutrition</h5>
+                <div class="plan-content">{{ plan.meal_suggestion_html | safe }}</div>
+                <p><strong>Target:</strong> Consume {{ plan.calories_to_consume }} calories</p>
+            </div>
+            <div class="card-footer text-end">
+                <form method="POST" action="{{ url_for('add_to_calendar') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-info">Add to Calendar</button>
+                </form>
+                <form method="POST" action="{{ url_for('send_email') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-success">Send to Email</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center text-muted">
+                <p>Your plan will appear here once you generate it.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('generate-plan-form');
+    if (form) {
+      form.addEventListener('submit', function() {
+        const btn = document.getElementById('generate-plan-btn');
+        const spinner = btn.querySelector('.spinner-border');
+        const buttonText = btn.querySelector('.button-text');
+
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        buttonText.textContent = ' Generating...';
+      });
+    }
+  </script>
+{% endblock %}
