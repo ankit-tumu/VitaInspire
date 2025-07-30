@@ -64,6 +64,10 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
+# Initialize database tables
+with app.app_context():
+    db.create_all()
+
 
 # --- Database Model ---
 # (Moved to models.py)
